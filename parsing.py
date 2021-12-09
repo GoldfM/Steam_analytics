@@ -5,24 +5,28 @@ import requests
 from multiprocessing import Pool
 def parse_weapons(name,color,rare,count):
     url = f'https://steamcommunity.com/market/listings/730/{name}%20%7C%20{color}%20%28{rare}%29/render/?query=&start=0&count={count}&country=RU&language=english&currency=1'
+
     data = requests.get(url).json()
 
     i=0
-    for skin in data['assets']['730']['2'].values():
-        i+=1
-        if skin['descriptions'][-1]['value']!=' ':
-            desc = skin['descriptions'][-1]
-            if desc['value']!=' ':
-                value = desc['value'].split('<br>')[2]
-                print(f"[FIND] {i}: {url[:url.find('/render/')]}\n{value[value.find(': ') + 2:value.find('<')]}\n\n")
-        else:
-            print(f'{i} HAVE NOT STICKERS')
-    '''except:
+    try:
+        for skin in data['assets']['730']['2'].values():
+            i+=1
+            if skin['descriptions'][-1]['value']!=' ':
+                desc = skin['descriptions'][-1]
+                if desc['value']!=' ':
+                    value = desc['value'].split('<br>')[2]
+                    print(f"[FIND] {i}: {url[:url.find('/render/')]}\n{value[value.find(': ') + 2:value.find('<')]}\n\n")
+            else:
+                pass
+                #print(f'{i} HAVE NOT STICKERS')
+    except:
         print(url)
         if count==5:
             pass
         else:
-            parse_weapons(name,color,rare,count-20)'''
+            parse_weapons(name,color,rare,count-20)
+    time.sleep(5)
 def recorder(record):
     time.sleep(1)
     name=record[1]
