@@ -1,4 +1,4 @@
-def main():
+def main_tk():
     from tkinter import Tk, Button, Entry
     from tkinter.ttk import Combobox
     window=Tk()
@@ -32,6 +32,7 @@ def main():
     def save_weap():
         name=combo_name.get()
         rare=combo_rare.get()
+        rare={'После полевых испытаний':'Field-Tested','Немного поношенное':'Minimal Wear','Закалённое в боях':'Battle-Scarred','Поношенное':'Well-Worn','Прямо с завода':'Factory New'}[rare]
         color=ent_color.get()
         x = Weapon(name, rare, color)
         x.save()
@@ -52,4 +53,4 @@ def main():
     btn_pow_2.place(x=290, y=440, height=70, width=260)
     window.mainloop()
 if __name__ == '__main__':
-    main()
+    main_tk()
