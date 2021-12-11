@@ -8,17 +8,19 @@ import vk_api
 
 token = '946104a1a4140405cb3993215b68e7ccae7ac3e90b695becd1dbc45688ee25bbe063e38e6eef7bf4569a3'
 vk_session = vk_api.VkApi(token=token)
-
+HEADERS ={'user-agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.131 Safari/537.36',
+          'accept':'*/*'}
 def send_msg(message):
     global vk_session
-    vk_session.method('messages.send', {'user_id': '254896650', 'message': message, 'random_id':0 })
+    #vk_session.method('messages.send', {'user_id': '254896650', 'message': message, 'random_id':0 })
     vk_session.method('messages.send', {'user_id': '245210027', 'message': message, 'random_id': 0})
 
 
 def parse_sticker(name):
+    global HEADERS
     url=name.replace('(','%28').replace(')','%29').replace('|','%7C').replace(' ','+').replace(' ','+')
     url=f'https://steamcommunity.com/market/search?category_730_ItemSet%5B%5D=any&category_730_ProPlayer%5B%5D=any&category_730_StickerCapsule%5B%5D=any&category_730_TournamentTeam%5B%5D=any&category_730_Weapon%5B%5D=any&appid=730&q=Sticker+%7C+{url}'
-    req=requests.get(url)
+    req=requests.get(url,headers=HEADERS)
     soup = bs(req.text, 'html.parser')
     div=soup.find('div',class_='market_listing_row market_recent_listing_row market_listing_searchresult')
     div_1=div.find('div',class_='market_listing_price_listings_block')
@@ -29,15 +31,16 @@ def parse_sticker(name):
     #print(price)
     return (price.replace('$','').replace(' USD',''))
 def parse_weapons(name,color,rare,start):
+    global HEADERS
     if start>=45:
         pass
     else:
         url = f'https://steamcommunity.com/market/listings/730/{name}%20%7C%20{color}%20%28{rare}%29/render/?query=&start={start}&count={45-start}&country=RU&language=english&currency=1'
-        data = requests.get(url).json()
+        data = requests.get(url,headers=HEADERS).json()
         i=start
         check=1
         try:
-            x=data['assets']['730']['2'].values()
+            data['assets']['730']['2'].values()
         except:
             check=0
             #print(data)
@@ -60,28 +63,29 @@ def parse_weapons(name,color,rare,start):
                                 if desc['value'] != ' ':
                                     value = desc['value'].split('<br>')[2]
                                     sticks = (value[value.find(': ') + 2:value.find('<')]).split(', ')
-                                    print(f"[FIND] {i + 1}: {url[:url.find('/render/')]}\n{sticks}\n")
+                                    print(f"[FIND] {i + 1}: {url[:url.find('/render/')]}\n{sticks}")
                                     total_price_stick = 0
                                     for sticker in sticks:
                                         total_price_stick += float(parse_sticker(sticker))
-                                        time.sleep(10)
+                                        time.sleep(11)
                                     total_price_stick = round(total_price_stick, 2)
                                     print(lowest_price,cur_price)
                                     if total_price_stick>=6.8:
                                         send_msg(f"Оружие: {item}\nСтикеры: {sticks}\nОбщая цена стикеров: {total_price_stick} $\nМинимальная цена оружия: {lowest_price} $\nЦена данного предложения: {cur_price} $\nПорядковый номер: {i}\n{url[:url.find('/render/')]}\n")
-                                        print('Сообщение отправлено')
+                                        print('Сообщение отправлено\n-------------')
                                     #cur_list.append([item, url[:url.find('/render/')], lowest_price, cur_price, total_price_stick, i])
 
                     except Exception as ex:
                         print(f'error  ---  {ex}')
-                        time.sleep(50)
-                        parse_weapons(name, color, rare, i)
+                        time.sleep(5)
+                        continue
             except:
                 print('ERROR FUCKED LIBRARY STEAM_COMMUNITY_MARKET')
-                time.sleep(60)
+                time.sleep(5)
                 parse_weapons(name, color, rare, i)
         else:
-            time.sleep(120)
+            print('FUCKED STEAM ERROR')
+            time.sleep(200)
             parse_weapons(name,color,rare,i)
 
 def recorder(record):
@@ -100,9 +104,8 @@ def main_parse():
     cur = conn.cursor()
     cur.execute("""SELECT * from weapons""")
     records=cur.fetchall()
-    list_good=[]
     for rec in records:
         recorder(rec)
 
 if __name__ == '__main__':
-    print(main_parse())
+    main_parse()
