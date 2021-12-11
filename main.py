@@ -4,15 +4,6 @@ from parsing import main_parse
 if __name__ == '__main__':
     #main_tk()
     weapons=main_parse()
-    print(weapons)
-    for weapon in weapons:
-        if weapon!=[]:
-            weapon=weapon[0]
-            print(weapon)
-            income=float()
-            if income>0:
-                print('================================================\n================================================')
-                print(weapon)
 
 
 #Сделать конвертер валяюты
