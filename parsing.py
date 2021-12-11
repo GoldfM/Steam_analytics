@@ -16,15 +16,17 @@ def parse_sticker(name):
     #print(url)
     #print(price)
     return (price.replace('$','').replace(' USD',''))
-def parse_weapons(name,color,rare,index):
+def parse_weapons(name,color,rare,index,start):
     count=[45,45,30,10][index]
-    url = f'https://steamcommunity.com/market/listings/730/{name}%20%7C%20{color}%20%28{rare}%29/render/?query=&start=0&count={count}&country=RU&language=english&currency=1'
-    data = requests.get(url).json()
-    i=-1
+    url = f'https://steamcommunity.com/market/listings/730/{name}%20%7C%20{color}%20%28{rare}%29/render/?query=&start={start}&count={count-start}&country=RU&language=english&currency=1'
+    data = requests.get(url)
+    i=start
     cur_list=[]
     try:
+        data=data.json()
         for skin in data['assets']['730']['2'].values():
             i+=1
+            print(url)
             if skin['descriptions'][-1]['value']!=' ':
                 desc = skin['descriptions'][-1]
                 if desc['value']!=' ':
@@ -34,24 +36,27 @@ def parse_weapons(name,color,rare,index):
                     total_price_stick=0
                     for sticker in sticks:
                         total_price_stick+=float(parse_sticker(sticker))
-                        time.sleep(5)
+                        time.sleep(50)
+                    total_price_stick=round(total_price_stick,2)
                     market = Market("USD")
                     item = f"{name} | {color} ({rare})".replace('%20',' ')
                     lowest_price=market.get_lowest_price(item, AppID.CSGO)
                     cur_price=data['listinginfo'].values()
-                    cur_price=round(list(cur_price)[i]['converted_price']*0.01147962409941,2)
+                    cur_price=round(float(list(cur_price)[i]['converted_price'])*0.01147962409941,2)
                     cur_list.append([item,url[:url.find('/render/')],lowest_price,cur_price,total_price_stick,i])
 
 
             else:
                 pass
-    except:
-        print('Error  --  ', url)
+    except Exception as ex:
+        print(f'error  ---  {ex}')
         if index==3:
-            time.sleep(30)
-        else:
             time.sleep(60)
-            cur_list=parse_weapons(name,color,rare,index+1)
+        else:
+            time.sleep(130)
+            cur_list=parse_weapons(name,color,rare,index+1,i)
+
+
     return cur_list
 
 def recorder(record):
@@ -62,7 +67,7 @@ def recorder(record):
     name_url=name.replace(' ','%20')
     color_url=color.replace(' ','%20')
     rare_url = rare.replace(' ', '%20')
-    return(parse_weapons(name_url,color_url, rare_url,0))
+    return(parse_weapons(name_url,color_url, rare_url,0,0))
 
 
 def main_parse():
@@ -76,4 +81,4 @@ def main_parse():
         list_good.append(recorder(rec))
     return (list_good)
 if __name__ == '__main__':
-    main_parse()
+    print(main_parse())

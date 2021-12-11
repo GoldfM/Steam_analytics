@@ -2,12 +2,14 @@
 from tk_in import main_tk
 from parsing import main_parse
 if __name__ == '__main__':
-    main_tk()
+    #main_tk()
     weapons=main_parse()
+    print(weapons)
     for weapon in weapons:
         if weapon!=[]:
+            weapon=weapon[0]
             print(weapon)
-            income=float(weapon[3])+float(weapon[4])/10-float(weapon[2])
+            income=float()
             if income>0:
                 print('================================================\n================================================')
                 print(weapon)
