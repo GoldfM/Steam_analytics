@@ -32,7 +32,7 @@ def parse_weapons(name,color,rare,start):
     if start>=45:
         pass
     else:
-        url = f'https://steamcommunity.com/market/listings/730/{name}%20%7C%20{color}%20%28{rare}%29/render/?query=&start={start}&count={55-start}&country=RU&language=english&currency=1'
+        url = f'https://steamcommunity.com/market/listings/730/{name}%20%7C%20{color}%20%28{rare}%29/render/?query=&start={start}&count={45-start}&country=RU&language=english&currency=1'
         data = requests.get(url).json()
         i=start
         check=1
@@ -53,7 +53,7 @@ def parse_weapons(name,color,rare,start):
                     try:
                         cur_price=round(float(list(data['listinginfo'].values())[i-start-1]['converted_price']) *0.01147962409941, 2)
                         print(f'Cur price: {cur_price}')
-                        if lowest_price*1.2<cur_price:
+                        if lowest_price*1.2>=cur_price:
                             #print(url)
                             if skin['descriptions'][-1]['value'] != ' ':
                                 desc = skin['descriptions'][-1]
@@ -67,8 +67,8 @@ def parse_weapons(name,color,rare,start):
                                         time.sleep(10)
                                     total_price_stick = round(total_price_stick, 2)
                                     print(lowest_price,cur_price)
-                                    if 1.2*(lowest_price)<cur_price:
-                                        send_msg(f"Оружие: {item}\nСтикеры: {sticks}\nОбщая цена стикеров: {total_price_stick}\nМинимальная цена оружия: {lowest_price}\nЦена данного предложения: {cur_price}\nПорядковый номер: {i}\n{url[:url.find('/render/')]}\n")
+                                    if total_price_stick>=6.8:
+                                        send_msg(f"Оружие: {item}\nСтикеры: {sticks}\nОбщая цена стикеров: {total_price_stick} $\nМинимальная цена оружия: {lowest_price} $\nЦена данного предложения: {cur_price} $\nПорядковый номер: {i}\n{url[:url.find('/render/')]}\n")
                                         print('Сообщение отправлено')
                                     #cur_list.append([item, url[:url.find('/render/')], lowest_price, cur_price, total_price_stick, i])
 
@@ -92,7 +92,7 @@ def recorder(record):
     name_url=name.replace(' ','%20')
     color_url=color.replace(' ','%20')
     rare_url = rare.replace(' ', '%20')
-    parse_weapons(name_url,color_url, rare_url,10)
+    parse_weapons(name_url,color_url, rare_url,0)
 
 def main_parse():
     import sqlite3
