@@ -11,7 +11,7 @@ vk_session = vk_api.VkApi(token=token)
 
 def send_msg(message):
     global vk_session
-    #vk_session.method('messages.send', {'user_id': '254896650', 'message': message, 'random_id':0 })
+    vk_session.method('messages.send', {'user_id': '254896650', 'message': message, 'random_id':0 })
     vk_session.method('messages.send', {'user_id': '245210027', 'message': message, 'random_id': 0})
 
 
@@ -35,51 +35,54 @@ def parse_weapons(name,color,rare,start):
         url = f'https://steamcommunity.com/market/listings/730/{name}%20%7C%20{color}%20%28{rare}%29/render/?query=&start={start}&count={55-start}&country=RU&language=english&currency=1'
         data = requests.get(url).json()
         i=start
-        cur_list=[]
         check=1
         try:
             x=data['assets']['730']['2'].values()
         except:
             check=0
-            print(data)
+            #print(data)
         if check==1:
-            market = Market("USD")
-            item = f"{name} | {color} ({rare})".replace('%20', ' ')
-            lowest_price = float(market.get_lowest_price(item, AppID.CSGO))
-            print(f'{item} -- lowest_price: {lowest_price} * 1.2 = {lowest_price*1.2}')
-            for skin in data['assets']['730']['2'].values():
-                i += 1
-                try:
-                    cur_price=round(float(list(data['listinginfo'].values())[i-start-1]['converted_price']) *0.01147962409941, 2)
-                    print(f'Cur price: {cur_price}')
-                    if lowest_price*1.2<cur_price:
+            try:
+                market = Market("USD")
+                item = f"{name} | {color} ({rare})".replace('%20', ' ')
+                print(item)
+                lowest_price = float(market.get_lowest_price(item, AppID.CSGO))
+                print(f'{item} -- lowest_price: {lowest_price} * 1.2 = {lowest_price*1.2}')
+                for skin in data['assets']['730']['2'].values():
+                    i += 1
+                    try:
+                        cur_price=round(float(list(data['listinginfo'].values())[i-start-1]['converted_price']) *0.01147962409941, 2)
+                        print(f'Cur price: {cur_price}')
+                        if lowest_price*1.2<cur_price:
+                            #print(url)
+                            if skin['descriptions'][-1]['value'] != ' ':
+                                desc = skin['descriptions'][-1]
+                                if desc['value'] != ' ':
+                                    value = desc['value'].split('<br>')[2]
+                                    sticks = (value[value.find(': ') + 2:value.find('<')]).split(', ')
+                                    print(f"[FIND] {i + 1}: {url[:url.find('/render/')]}\n{sticks}\n")
+                                    total_price_stick = 0
+                                    for sticker in sticks:
+                                        total_price_stick += float(parse_sticker(sticker))
+                                        time.sleep(10)
+                                    total_price_stick = round(total_price_stick, 2)
+                                    print(lowest_price,cur_price)
+                                    if 1.2*(lowest_price)<cur_price:
+                                        send_msg(f"Оружие: {item}\nСтикеры: {sticks}\nОбщая цена стикеров: {total_price_stick}\nМинимальная цена оружия: {lowest_price}\nЦена данного предложения: {cur_price}\nПорядковый номер: {i}\n{url[:url.find('/render/')]}\n")
+                                        print('Сообщение отправлено')
+                                    #cur_list.append([item, url[:url.find('/render/')], lowest_price, cur_price, total_price_stick, i])
 
-                        print(url)
-                        if skin['descriptions'][-1]['value'] != ' ':
-                            desc = skin['descriptions'][-1]
-                            if desc['value'] != ' ':
-                                value = desc['value'].split('<br>')[2]
-                                sticks = (value[value.find(': ') + 2:value.find('<')]).split(', ')
-                                print(f"[FIND] {i + 1}: {url[:url.find('/render/')]}\n{sticks}\n")
-                                total_price_stick = 0
-                                for sticker in sticks:
-                                    total_price_stick += float(parse_sticker(sticker))
-                                    time.sleep(10)
-                                total_price_stick = round(total_price_stick, 2)
-                                item = f"{name} | {color} ({rare})".replace('%20', ' ')
-                                print(lowest_price,cur_price)
-                                if 1.2*(lowest_price)<cur_price:
-                                    send_msg(f"Оружие: {item}\nСтикеры: {sticks}\nОбщая цена стикеров: {total_price_stick}\nМинимальная цена оружия: {lowest_price}\nЦена данного предложения: {cur_price}\n{url[:url.find('/render/')]}\nПорядковый номер: {i}")
-                                    print('Сообщение отправлено')
-                                #cur_list.append([item, url[:url.find('/render/')], lowest_price, cur_price, total_price_stick, i])
-                except Exception as ex:
-                    print(f'error  ---  {ex}')
-                    time.sleep(50)
-                    cur_list = parse_weapons(name, color, rare, i)
+                    except Exception as ex:
+                        print(f'error  ---  {ex}')
+                        time.sleep(50)
+                        parse_weapons(name, color, rare, i)
+            except:
+                print('ERROR FUCKED LIBRARY STEAM_COMMUNITY_MARKET')
+                time.sleep(60)
+                parse_weapons(name, color, rare, i)
         else:
             time.sleep(120)
-            cur_list=parse_weapons(name,color,rare,i)
-        return cur_list
+            parse_weapons(name,color,rare,i)
 
 def recorder(record):
     name=record[1]
@@ -89,7 +92,7 @@ def recorder(record):
     name_url=name.replace(' ','%20')
     color_url=color.replace(' ','%20')
     rare_url = rare.replace(' ', '%20')
-    return(parse_weapons(name_url,color_url, rare_url,10))
+    parse_weapons(name_url,color_url, rare_url,10)
 
 def main_parse():
     import sqlite3
@@ -99,7 +102,7 @@ def main_parse():
     records=cur.fetchall()
     list_good=[]
     for rec in records:
-        list_good.append(recorder(rec))
-    return (list_good)
+        recorder(rec)
+
 if __name__ == '__main__':
     print(main_parse())
